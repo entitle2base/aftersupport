@@ -33,7 +33,11 @@ export default function ChatWidget() {
         body: JSON.stringify({ message: userMsg }),
       })
       const data = await res.json()
-      setMessages(prev => [...prev, { role: 'bot', text: data.reply }])
+      if (!res.ok) {
+        setMessages(prev => [...prev, { role: 'bot', text: data.error ?? 'エラーが発生しました。もう一度お試しください。' }])
+      } else {
+        setMessages(prev => [...prev, { role: 'bot', text: data.reply }])
+      }
     } catch {
       setMessages(prev => [...prev, { role: 'bot', text: 'エラーが発生しました。もう一度お試しください。' }])
     }

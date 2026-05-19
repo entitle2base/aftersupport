@@ -123,7 +123,7 @@ export default function Sidebar() {
             <Link
               key={i}
               href={item.href}
-              className={`sb-item${i === 0 ? ' active' : ''}`}
+              className={`sb-item${pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)) ? ' active' : ''}`}
             >
               {item.icon}
               <span>{item.labelFull ?? item.label}</span>
@@ -154,7 +154,7 @@ export default function Sidebar() {
           <Link
             key={i}
             href={item.href}
-            className={`mob-nav-item${i === 0 ? ' active' : ''}`}
+            className={`mob-nav-item${pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)) ? ' active' : ''}`}
           >
             {item.mobileIcon}
             <span>{item.label}</span>
