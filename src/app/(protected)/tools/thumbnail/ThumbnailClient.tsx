@@ -60,9 +60,12 @@ export default function ThumbnailClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: image.split(',')[1], mimeType: imageFile.type }),
       })
-      if (!res.ok) throw new Error()
       const data = await res.json()
-      setFeedback(data.feedback)
+      if (!res.ok) {
+        setError(data.error ?? '解析に失敗しました。しばらくしてから再度お試しください。')
+      } else {
+        setFeedback(data.feedback)
+      }
     } catch {
       setError('解析に失敗しました。しばらくしてから再度お試しください。')
     }

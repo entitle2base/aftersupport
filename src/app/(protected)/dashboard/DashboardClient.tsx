@@ -140,9 +140,12 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: thumbPreview.split(',')[1], mimeType: thumbFile.type }),
       })
-      if (!res.ok) throw new Error()
       const data = await res.json()
-      setThumbFeedback(data.feedback)
+      if (!res.ok) {
+        setThumbError(data.error ?? '解析に失敗しました。しばらくしてから再度お試しください。')
+      } else {
+        setThumbFeedback(data.feedback)
+      }
     } catch {
       setThumbError('解析に失敗しました。しばらくしてから再度お試しください。')
     }
