@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe/client'
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
+
+export const dynamic = 'force-dynamic'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const stripe = new (Stripe as any)(process.env.STRIPE_SECRET_KEY ?? 'sk_test_placeholder', {
+  apiVersion: '2026-04-22.dahlia',
+}) as Stripe
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

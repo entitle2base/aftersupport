@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe/client'
 import { createClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
+  const { default: Stripe } = await import('stripe')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stripe = new (Stripe as any)(process.env.STRIPE_SECRET_KEY ?? 'sk_test_placeholder', {
+    apiVersion: '2026-04-22.dahlia',
+  })
   const { priceId } = await request.json()
   const price = priceId ?? process.env.STRIPE_PRICE_ID
 
