@@ -19,8 +19,8 @@ const CHIPS = ['すべて', '動画編集', 'SNS運用', 'AI活用', 'カット'
 const TABS  = ['すべて', '未完了', '完了済み', 'お気に入り']
 
 const VIDEOS = [
-  { id:1,  title:'テロップをカッコよく見せる3要素', desc:'視聴者の目を引くテロップデザインの3つのポイントを解説', dur:'実演', bg:'linear-gradient(160deg,#12193a,#1e2d60)', emoji:'Aa',  tags:['テロップ'], src:'/videos/テロップをカッコよく見せる3要素.mp4' },
-  { id:2,  title:'プレミアプロ画面配置',            desc:'Premiere Proの最適な作業環境・画面レイアウトを整える', dur:'実演', bg:'linear-gradient(160deg,#101a10,#1a2e1a)', emoji:'🎬', tags:['動画編集'], src:'/videos/プレミアプロ画面配置.mp4' },
+  { id:1,  title:'テロップをカッコよく見せる3要素', desc:'視聴者の目を引くテロップデザインの3つのポイントを解説', dur:'実演', bg:'linear-gradient(160deg,#12193a,#1e2d60)', emoji:'Aa',  tags:['テロップ'], src:'https://yucbfnsupxpxptpwaazl.supabase.co/storage/v1/object/public/videos/telop-3-elements.mp4' },
+  { id:2,  title:'プレミアプロ画面配置',            desc:'Premiere Proの最適な作業環境・画面レイアウトを整える', dur:'実演', bg:'linear-gradient(160deg,#101a10,#1a2e1a)', emoji:'🎬', tags:['動画編集'], src:'https://yucbfnsupxpxptpwaazl.supabase.co/storage/v1/object/public/videos/premiere-screen-layout.mp4' },
   { id:3,  title:'カット編集の基本',         desc:'不要な部分をカットし、テンポの良い映像を作る',    dur:'準備中', bg:'linear-gradient(160deg,#0a1628,#162a50)', emoji:'✂️',  tags:['カット'] },
   { id:4,  title:'BGM・SEの選び方',           desc:'シーンに合った音楽・効果音の選び方',              dur:'準備中', bg:'linear-gradient(160deg,#0d1f1a,#142e25)', emoji:'🎵',  tags:['BGM・SE'] },
   { id:5,  title:'撮影の基本設定',             desc:'高品質な映像を撮るためのカメラ設定',              dur:'準備中', bg:'linear-gradient(160deg,#1a1030,#2d1a50)', emoji:'📷',  tags:['動画編集'] },
