@@ -4,28 +4,13 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import '@/app/chance.css'
 
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/28EdR8fqicd1fMJdAPdfG02'
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [joinLoading, setJoinLoading] = useState(false)
   const [error, setError] = useState('')
-
-  async function handleJoin() {
-    setJoinLoading(true)
-    try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      })
-      const data = await res.json()
-      if (data.url) window.location.href = data.url
-    } catch {
-      setError('決済ページへの移動に失敗しました。しばらくしてから再度お試しください。')
-    }
-    setJoinLoading(false)
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -180,23 +165,28 @@ export default function LoginPage() {
             <p style={{ font: '500 12px var(--sans)', color: 'rgba(255,255,255,.55)', marginBottom: '12px' }}>
               まだ入会していない方はこちら
             </p>
-            <button
-              onClick={handleJoin}
-              disabled={joinLoading}
+            <a
+              href={STRIPE_PAYMENT_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
+                display: 'block',
                 width: '100%',
                 padding: '13px',
                 borderRadius: '12px',
-                background: joinLoading ? 'rgba(255,255,255,.1)' : 'rgba(255,255,255,.15)',
+                background: 'rgba(255,255,255,.15)',
                 color: '#fff',
                 font: '700 13px var(--sans)',
                 border: '1px solid rgba(255,255,255,.25)',
-                cursor: joinLoading ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
+                textAlign: 'center',
+                textDecoration: 'none',
                 transition: 'all .2s',
+                boxSizing: 'border-box',
               }}
             >
-              {joinLoading ? '移動中...' : '新規入会（Stripeで決済）'}
-            </button>
+              新規入会はこちら（Stripeで決済）
+            </a>
           </div>
         </div>
       </div>
