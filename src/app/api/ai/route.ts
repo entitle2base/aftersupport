@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdmin } from '@supabase/supabase-js'
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
+const DAILY_LIMIT = 20
+
 const supabaseAdmin = createAdmin(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -15,30 +17,44 @@ export async function POST(request: Request) {
   // ログイン中のユーザーを取得
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // チャットログを保存（APIキー未設定でも保存する）
-  if (user) {
-    await supabaseAdmin.from('ai_chat_logs').insert({
-      user_id: user.id,
-      role: 'user',
-      content: message,
-    })
+  // 1日の利用上限チェック
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const { count } = await supabaseAdmin
+    .from('ai_chat_logs')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('role', 'user')
+    .gte('created_at', todayStart.toISOString())
+
+  if ((count ?? 0) >= DAILY_LIMIT) {
+    return NextResponse.json(
+      { error: `1日の利用上限（${DAILY_LIMIT}回）に達しました。明日また試してください。` },
+      { status: 429 }
+    )
   }
+
+  // チャットログを保存
+  await supabaseAdmin.from('ai_chat_logs').insert({
+    user_id: user.id,
+    role: 'user',
+    content: message,
+  })
 
   // APIキー未設定の場合はモックレスポンス
   if (!ANTHROPIC_API_KEY || ANTHROPIC_API_KEY === 'sk-ant-xxx') {
     const reply = '（AIチャット機能は現在準備中です。APIキーが設定されると実際の回答が届きます。）'
-    if (user) {
-      await supabaseAdmin.from('ai_chat_logs').insert({
-        user_id: user.id,
-        role: 'assistant',
-        content: reply,
-      })
-    }
+    await supabaseAdmin.from('ai_chat_logs').insert({
+      user_id: user.id,
+      role: 'assistant',
+      content: reply,
+    })
     return NextResponse.json({ reply })
   }
 
-  // Claude APIを使った本番実装
+  // Claude API
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -61,13 +77,11 @@ export async function POST(request: Request) {
     const data = await res.json()
     const reply = data.content?.[0]?.text ?? 'うまく回答を取得できませんでした。'
 
-    if (user) {
-      await supabaseAdmin.from('ai_chat_logs').insert({
-        user_id: user.id,
-        role: 'assistant',
-        content: reply,
-      })
-    }
+    await supabaseAdmin.from('ai_chat_logs').insert({
+      user_id: user.id,
+      role: 'assistant',
+      content: reply,
+    })
 
     return NextResponse.json({ reply })
   } catch (error) {

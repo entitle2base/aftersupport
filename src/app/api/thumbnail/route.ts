@@ -1,10 +1,39 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdmin } from '@supabase/supabase-js'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+const DAILY_LIMIT = 5
+
+const supabaseAdmin = createAdmin(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export async function POST(request: Request) {
   const { image, mimeType } = await request.json()
   if (!image) return NextResponse.json({ error: 'image required' }, { status: 400 })
+
+  // ユーザー認証
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // 1日の利用上限チェック（thumbnail_logsテーブルを使用）
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const { count } = await supabaseAdmin
+    .from('thumbnail_logs')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .gte('created_at', todayStart.toISOString())
+
+  if ((count ?? 0) >= DAILY_LIMIT) {
+    return NextResponse.json(
+      { error: `1日の添削上限（${DAILY_LIMIT}回）に達しました。明日また試してください。` },
+      { status: 429 }
+    )
+  }
 
   // APIキー未設定の場合はモックレスポンス
   if (!OPENAI_API_KEY || OPENAI_API_KEY === 'sk-xxx') {
@@ -25,6 +54,9 @@ export async function POST(request: Request) {
       },
     })
   }
+
+  // 利用ログを記録
+  await supabaseAdmin.from('thumbnail_logs').insert({ user_id: user.id })
 
   // GPT-4o 本番実装
   try {
@@ -70,20 +102,14 @@ goodを2〜3個、improveを2〜3個含めてください。
 
     const data = await response.json()
 
-    // OpenAI APIエラーの詳細ログ
     if (!response.ok) {
       console.error('[thumbnail] OpenAI API error:', JSON.stringify(data))
-      const errMsg = data.error?.message || 'OpenAI API error'
-      return NextResponse.json({ error: errMsg }, { status: 502 })
+      return NextResponse.json({ error: data.error?.message || 'OpenAI API error' }, { status: 502 })
     }
 
     const content = data.choices?.[0]?.message?.content
-    if (!content) {
-      console.error('[thumbnail] No content in response:', JSON.stringify(data))
-      throw new Error('No response')
-    }
+    if (!content) throw new Error('No response')
 
-    // JSONのみ抽出（```json ... ``` の形式にも対応）
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('Invalid JSON')
     const feedback = JSON.parse(jsonMatch[0])
