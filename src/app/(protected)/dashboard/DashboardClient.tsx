@@ -53,8 +53,14 @@ function scoreBg(n: number) {
 export default function DashboardClient({ firstName }: { firstName: string }) {
   const [activeChip, setActiveChip] = useState('すべて')
   const [activeTab,  setActiveTab]  = useState('すべて')
-  const [done,  setDone]  = useState<number[]>([])
-  const [saved, setSaved] = useState<number[]>([])
+  const [done,  setDone]  = useState<number[]>(() => {
+    if (typeof window === 'undefined') return []
+    try { return JSON.parse(localStorage.getItem('chance_done') ?? '[]') } catch { return [] }
+  })
+  const [saved, setSaved] = useState<number[]>(() => {
+    if (typeof window === 'undefined') return []
+    try { return JSON.parse(localStorage.getItem('chance_saved') ?? '[]') } catch { return [] }
+  })
   const [query, setQuery] = useState('')
 
   const [thumbPreview,  setThumbPreview]  = useState<string | null>(null)
@@ -66,12 +72,12 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
   const fileRef = useRef<HTMLInputElement>(null)
 
   /* ── 動画モーダル ── */
-  const [videoModal, setVideoModal] = useState<{ src: string; title: string } | null>(null)
+  const [videoModal, setVideoModal] = useState<{ src: string; title: string; id?: number } | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  function openVideo(v: { src?: string; title: string }) {
+  function openVideo(v: { id?: number; src?: string; title: string }) {
     if (!v.src) return
-    setVideoModal({ src: v.src, title: v.title })
+    setVideoModal({ src: v.src, title: v.title, id: v.id })
   }
   function closeVideo() {
     if (videoRef.current) { videoRef.current.pause() }
@@ -96,10 +102,20 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
     return v.title.includes(q) || v.tags.some(t => t.includes(q)) || v.desc.includes(q)
   })
 
-  function toggleDone(id: number)  { setDone(p  => p.includes(id) ? p.filter(d => d !== id) : [...p, id]) }
+  function toggleDone(id: number) {
+    setDone(p => {
+      const next = p.includes(id) ? p.filter(d => d !== id) : [...p, id]
+      localStorage.setItem('chance_done', JSON.stringify(next))
+      return next
+    })
+  }
   function toggleSaved(id: number, e: React.MouseEvent) {
     e.stopPropagation()
-    setSaved(p => p.includes(id) ? p.filter(s => s !== id) : [...p, id])
+    setSaved(p => {
+      const next = p.includes(id) ? p.filter(s => s !== id) : [...p, id]
+      localStorage.setItem('chance_saved', JSON.stringify(next))
+      return next
+    })
   }
 
   function handleThumbFile(file: File) {
@@ -408,7 +424,7 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
           ) : (
             filteredVideos.map(v => (
               <div key={v.id} className={`vcard${v.src ? ' vcard-playable' : ''}`}
-                onClick={() => v.src ? openVideo(v) : toggleDone(v.id)}>
+                onClick={() => v.src ? openVideo({ id: v.id, src: v.src, title: v.title }) : toggleDone(v.id)}>
                 <div className="vcard-thumb">
                   <div className="vcard-thumb-bg" style={{ background:v.bg }}>
                     <span style={{ fontSize:'32px', opacity:.18 }}>{v.emoji}</span>
@@ -461,6 +477,9 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
               autoPlay
               controlsList="nodownload"
               onContextMenu={e => e.preventDefault()}
+              onEnded={() => {
+                if (videoModal.id && !done.includes(videoModal.id)) toggleDone(videoModal.id)
+              }}
               className="vmodal-video"
             />
           </div>
