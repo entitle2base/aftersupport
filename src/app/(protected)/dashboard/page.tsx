@@ -21,13 +21,13 @@ export default async function DashboardPage() {
   const avatarLetter = firstName.charAt(0).toUpperCase()
 
   return (
-    <div className="layout">
+    <div className="ds-layout">
       <Sidebar />
 
-      <div className="main-wrap">
+      <div className="ds-main-wrap">
         {/* Header */}
-        <header className="dash-hdr">
-          <button className="hdr-notif">
+        <header className="ds-dash-hdr">
+          <button className="ds-hdr-notif">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 01-3.46 0"/>
@@ -35,10 +35,10 @@ export default async function DashboardPage() {
             お知らせ
           </button>
 
-          <div className="hdr-user">
-            <div className="hdr-av">{avatarLetter}</div>
-            <span className="hdr-email">{user?.email}</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: 'var(--gy)' }}>
+          <div className="ds-hdr-user">
+            <div className="ds-hdr-av">{avatarLetter}</div>
+            <span className="ds-hdr-email">{user?.email}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ color: 'var(--ds-text-muted)' }}>
               <polyline points="6 9 12 15 18 9"/>
             </svg>
             <LogoutButton />
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
         </header>
 
         {/* Main content */}
-        <main className="dash-main">
+        <main className="ds-dash-main">
           <DashboardClient firstName={firstName} />
         </main>
       </div>

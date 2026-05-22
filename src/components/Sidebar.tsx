@@ -9,14 +9,14 @@ const NAV = [
     label: 'ダッシュボード',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
       </svg>
     ),
     mobileIcon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
       </svg>
     ),
   },
@@ -73,12 +73,12 @@ const NAV = [
     labelFull: 'お気に入り',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
       </svg>
     ),
     mobileIcon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
       </svg>
     ),
   },
@@ -101,7 +101,6 @@ const NAV = [
   },
 ]
 
-// モバイルボトムナビに表示する項目（最大5個）
 const MOB_NAV = [NAV[0], NAV[1], NAV[2], NAV[3], NAV[4]]
 
 export default function Sidebar() {
@@ -109,21 +108,21 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* ── Desktop Sidebar ── */}
-      <aside className="sidebar">
+      {/* Desktop Sidebar */}
+      <aside className="ds-sidebar">
         {/* Logo */}
-        <div className="sb-logo">
-          <div className="sb-logo-ico">A</div>
-          <span className="sb-logo-text">AFTER SUPPORT</span>
+        <div className="ds-sb-logo">
+          <div className="ds-sb-logo-ico">A</div>
+          <span className="ds-sb-logo-text">AFTER SUPPORT</span>
         </div>
 
         {/* Nav */}
-        <nav className="sb-nav">
+        <nav className="ds-sb-nav">
           {NAV.map((item, i) => (
             <Link
               key={i}
               href={item.href}
-              className={`sb-item${pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)) ? ' active' : ''}`}
+              className={`ds-sb-item${pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)) ? ' active' : ''}`}
             >
               {item.icon}
               <span>{item.labelFull ?? item.label}</span>
@@ -132,12 +131,12 @@ export default function Sidebar() {
         </nav>
 
         {/* Zoom button */}
-        <div className="sb-footer">
+        <div className="ds-sb-footer">
           <a
             href="https://timerex.net/s/entitle2base.atokabu_404c/32a499b2"
             target="_blank"
             rel="noopener noreferrer"
-            className="sb-zoom"
+            className="ds-sb-zoom"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14"/>
@@ -148,13 +147,13 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* ── Mobile Bottom Nav ── */}
-      <nav className="mob-nav">
+      {/* Mobile Bottom Nav */}
+      <nav className="ds-mob-nav">
         {MOB_NAV.map((item, i) => (
           <Link
             key={i}
             href={item.href}
-            className={`mob-nav-item${pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)) ? ' active' : ''}`}
+            className={`ds-mob-nav-item${pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)) ? ' active' : ''}`}
           >
             {item.mobileIcon}
             <span>{item.label}</span>
