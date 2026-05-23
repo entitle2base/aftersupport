@@ -2,15 +2,23 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import '@/app/chance.css'
 
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/28EdR8fqicd1fMJdAPdfG02'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const searchParams = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search)
+    : null
+  const isSubscriptionError = searchParams?.get('error') === 'subscription'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -18,19 +26,19 @@ export default function LoginPage() {
     setError('')
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${location.origin}/auth/callback`,
-      },
-    })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      setError('送信に失敗しました。メールアドレスをご確認ください。')
-    } else {
-      setSent(true)
+      if (error.message.includes('Invalid login credentials')) {
+        setError('メールアドレスまたはパスワードが正しくありません。')
+      } else {
+        setError('ログインに失敗しました。しばらく経ってから再度お試しください。')
+      }
+      setLoading(false)
+      return
     }
-    setLoading(false)
+
+    router.push('/portal')
   }
 
   return (
@@ -43,75 +51,78 @@ export default function LoginPage() {
               After Support
             </div>
             <h1 className="lf-h">受講生専用サイトへ<br />ログイン</h1>
-            <p className="lf-sub">ご入会時のメールアドレスでログインしてください</p>
+            <p className="lf-sub">ご入会時のメールアドレスとパスワードでログインしてください</p>
           </div>
 
-          {sent ? (
+          {isSubscriptionError && (
             <div style={{
-              background: 'var(--pk-s)',
-              border: '1px solid rgba(37,99,235,.15)',
-              borderRadius: '16px',
-              padding: '28px 24px',
-              textAlign: 'center',
+              background: '#FEF2F2',
+              border: '1px solid rgba(239,68,68,.2)',
+              borderRadius: '10px',
+              padding: '12px 16px',
+              font: '500 13px var(--sans)',
+              color: '#DC2626',
+              marginBottom: '20px',
             }}>
-              <div style={{ fontSize: '40px', marginBottom: '12px' }}>📬</div>
-              <p style={{ font: '700 15px var(--sans)', color: 'var(--dk)', marginBottom: '8px' }}>
-                メールを送信しました
-              </p>
-              <p style={{ font: '400 13px/1.7 var(--sans)', color: 'var(--gy)' }}>
-                <strong style={{ color: 'var(--dk)' }}>{email}</strong> に<br />
-                ログインリンクを送信しました。<br />
-                メールを確認してリンクをクリックしてください。
-              </p>
-              <button
-                onClick={() => { setSent(false); setEmail('') }}
-                style={{ marginTop: '20px', font: '600 12px var(--sans)', color: 'var(--pk)', background: 'none', border: 'none', cursor: 'pointer' }}
-              >
-                別のアドレスで試す
-              </button>
+              サブスクリプションが有効ではありません。ご確認ください。
             </div>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <div className="fg">
-                <label>メールアドレス</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                />
-              </div>
-
-              {error && (
-                <div style={{
-                  background: '#FEF2F2',
-                  border: '1px solid rgba(239,68,68,.2)',
-                  borderRadius: '10px',
-                  padding: '10px 14px',
-                  font: '500 13px var(--sans)',
-                  color: '#DC2626',
-                  marginBottom: '16px',
-                }}>
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-login"
-                style={{ opacity: loading ? 0.7 : 1 }}
-              >
-                {loading ? '送信中...' : 'ログインリンクを送る'}
-              </button>
-
-              <p className="lf-ft">
-                パスワードは不要です。メールアドレスを入力すると<br />
-                ログイン用リンクが届きます。
-              </p>
-            </form>
           )}
+
+          <form onSubmit={handleSubmit}>
+            <div className="fg">
+              <label>メールアドレス</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+              />
+            </div>
+
+            <div className="fg">
+              <label>パスワード</label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+
+            {error && (
+              <div style={{
+                background: '#FEF2F2',
+                border: '1px solid rgba(239,68,68,.2)',
+                borderRadius: '10px',
+                padding: '10px 14px',
+                font: '500 13px var(--sans)',
+                color: '#DC2626',
+                marginBottom: '16px',
+              }}>
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-login"
+              style={{ opacity: loading ? 0.7 : 1 }}
+            >
+              {loading ? 'ログイン中...' : 'ログイン'}
+            </button>
+
+            <p className="lf-ft">
+              <Link
+                href="/reset-password"
+                style={{ color: 'var(--pk)', textDecoration: 'none', fontWeight: '600' }}
+              >
+                パスワードをお忘れですか？
+              </Link>
+            </p>
+          </form>
         </div>
       </div>
 

@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       }
       case 'customer.subscription.created': {
         const sub = event.data.object as Stripe.Subscription
-        await setMemberStatus(sub.customer as string, 'active')
+        await setMemberStatus(sub.customer as string, 'active', true)
         break
       }
       case 'customer.subscription.updated': {
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
   }
 }
 
-async function setMemberStatus(customerId: string, status: string) {
+async function setMemberStatus(customerId: string, status: string, isNew = false) {
   const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer
   const email = customer.email
   if (!email) return
@@ -93,4 +93,38 @@ async function setMemberStatus(customerId: string, status: string) {
       stripe_customer_id: customerId,
     })
     .eq('email', email)
+
+  // 新規サブスク開始 → Supabaseアカウント未作成の場合は招待メール送信
+  if (isNew && status === 'active') {
+    const { data: existingProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .single()
+
+    if (!existingProfile) {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aftersupport.vercel.app'
+      const { data: inviteData } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        redirectTo: `${siteUrl}/update-password`,
+      })
+
+      // 招待と同時にprofileも作成しておく
+      if (inviteData?.user) {
+        const { data: school } = await supabaseAdmin
+          .from('schools')
+          .select('id')
+          .eq('slug', 'chance')
+          .single()
+
+        await supabaseAdmin.from('profiles').insert({
+          id: inviteData.user.id,
+          email,
+          role: 'student',
+          school_id: school?.id ?? null,
+          subscription_status: 'active',
+          stripe_customer_id: customerId,
+        })
+      }
+    }
+  }
 }

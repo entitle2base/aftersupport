@@ -25,6 +25,11 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login?error=auth`)
   }
 
+  // パスワードリセット・招待リンクはパスワード設定画面へ
+  if (type === 'recovery' || type === 'invite') {
+    return NextResponse.redirect(`${origin}/update-password`)
+  }
+
   // ログイン成功 → ユーザー情報取得
   const { data: { user } } = await supabase.auth.getUser()
   if (!user?.email) {
