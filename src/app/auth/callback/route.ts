@@ -10,58 +10,64 @@ const supabaseAdmin = createAdmin(
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
+  const code = searchParams.get('code')
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
 
-  if (!token_hash || !type) {
-    return NextResponse.redirect(`${origin}/login?error=auth`)
-  }
-
   const supabase = await createClient()
-  const { error } = await supabase.auth.verifyOtp({ token_hash, type })
 
-  if (error) {
-    console.error('[callback] verifyOtp error:', JSON.stringify(error))
-    return NextResponse.redirect(`${origin}/login?error=auth`)
+  // PKCE フロー（codeパラメータ）
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error) {
+      console.error('[callback] exchangeCodeForSession error:', error.message)
+      return NextResponse.redirect(`${origin}/login?error=auth`)
+    }
+    // パスワードリセット・招待リンク → パスワード設定画面へ
+    if (type === 'recovery' || type === 'invite') {
+      return NextResponse.redirect(`${origin}/update-password`)
+    }
+    return NextResponse.redirect(`${origin}/portal`)
   }
 
-  // パスワードリセット・招待リンクはパスワード設定画面へ
-  if (type === 'recovery' || type === 'invite') {
-    return NextResponse.redirect(`${origin}/update-password`)
-  }
+  // OTP / token_hash フロー
+  if (token_hash && type) {
+    const { error } = await supabase.auth.verifyOtp({ token_hash, type })
+    if (error) {
+      console.error('[callback] verifyOtp error:', JSON.stringify(error))
+      return NextResponse.redirect(`${origin}/login?error=auth`)
+    }
 
-  // ログイン成功 → ユーザー情報取得
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user?.email) {
-    return NextResponse.redirect(`${origin}/login?error=auth`)
-  }
+    if (type === 'recovery' || type === 'invite') {
+      return NextResponse.redirect(`${origin}/update-password`)
+    }
 
-  // 既存プロフィールがあるか確認
-  const { data: existingProfile } = await supabaseAdmin
-    .from('profiles')
-    .select('id')
-    .eq('id', user.id)
-    .single()
+    // マジックリンク（旧フロー）→ プロフィール確認してポータルへ
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user?.email) {
+      return NextResponse.redirect(`${origin}/login?error=auth`)
+    }
 
-  if (!existingProfile) {
-    // 初回ログイン：stripe_membersでStripe決済済みか確認
-    const { data: stripeMember } = await supabaseAdmin
-      .from('stripe_members')
-      .select('subscription_status, stripe_customer_id')
-      .eq('email', user.email)
-      .single()
-
-    // school_idを取得
-    const { data: school } = await supabaseAdmin
-      .from('schools')
-      .select('id')
-      .eq('slug', 'chance')
-      .single()
-
-    // プロフィール作成（Stripe決済済みならactive、未決済はnull）
-    await supabaseAdmin
+    const { data: existingProfile } = await supabaseAdmin
       .from('profiles')
-      .insert({
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (!existingProfile) {
+      const { data: stripeMember } = await supabaseAdmin
+        .from('stripe_members')
+        .select('subscription_status, stripe_customer_id')
+        .eq('email', user.email)
+        .single()
+
+      const { data: school } = await supabaseAdmin
+        .from('schools')
+        .select('id')
+        .eq('slug', 'chance')
+        .single()
+
+      await supabaseAdmin.from('profiles').insert({
         id: user.id,
         email: user.email,
         role: 'student',
@@ -69,7 +75,10 @@ export async function GET(request: Request) {
         subscription_status: stripeMember?.subscription_status ?? null,
         stripe_customer_id: stripeMember?.stripe_customer_id ?? null,
       })
+    }
+
+    return NextResponse.redirect(`${origin}/portal`)
   }
 
-  return NextResponse.redirect(`${origin}/portal`)
+  return NextResponse.redirect(`${origin}/login?error=auth`)
 }
