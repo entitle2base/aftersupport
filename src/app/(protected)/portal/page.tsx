@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import ClearHashError from '@/components/ClearHashError'
 import '@/app/chance.css'
 
 export default async function PortalPage() {
@@ -17,6 +18,7 @@ export default async function PortalPage() {
 
   return (
     <div className="portal">
+      <ClearHashError />
       <div className="portal-inner">
         {/* ヘッダー部分 */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
