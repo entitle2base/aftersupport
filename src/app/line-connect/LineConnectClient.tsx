@@ -3,9 +3,11 @@
 export default function LineConnectClient({
   lineAuthUrl,
   error,
+  msg,
 }: {
   lineAuthUrl: string
   error?: string
+  msg?: string
 }) {
   return (
     <div style={{
@@ -44,9 +46,10 @@ export default function LineConnectClient({
           <div style={{
             padding: '12px 16px', borderRadius: 10, marginBottom: 20,
             background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)',
-            color: '#EF4444', fontSize: 13,
+            color: '#EF4444', fontSize: 13, textAlign: 'left',
           }}>
-            {error === 'denied' ? 'LINEの連携をキャンセルしました。もう一度お試しください。' : 'エラーが発生しました。もう一度お試しください。'}
+            <div>{error === 'denied' ? 'LINEの連携をキャンセルしました。もう一度お試しください。' : `エラー: ${error}`}</div>
+            {msg && <div style={{ fontSize: 11, marginTop: 6, wordBreak: 'break-all', opacity: 0.8 }}>{msg}</div>}
           </div>
         )}
 
