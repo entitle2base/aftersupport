@@ -7,10 +7,19 @@ export async function POST(request: Request) {
   const url = new URL(request.url)
   const rpID = url.hostname
 
+  // クライアントからcredential IDが渡された場合はallowCredentialsに設定
+  // → iOSが選択画面をスキップして直接Face IDを起動する
+  let body: { credentialId?: string } = {}
+  try { body = await request.json() } catch { /* body なし */ }
+
+  const allowCredentials = body.credentialId
+    ? [{ id: body.credentialId, transports: ['internal'] as AuthenticatorTransport[] }]
+    : undefined
+
   const options = await generateAuthenticationOptions({
     rpID,
     userVerification: 'required',
-    // allowCredentials を指定しない = ディスカバラブルクレデンシャル（メール不要）
+    allowCredentials,
   })
 
   const { data: challengeRecord, error } = await admin

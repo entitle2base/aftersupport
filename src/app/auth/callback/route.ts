@@ -23,10 +23,51 @@ export async function GET(request: Request) {
       console.error('[callback] exchangeCodeForSession error:', error.message)
       return NextResponse.redirect(`${origin}/login?error=auth`)
     }
-    // パスワードリセット・招待リンク → パスワード設定画面へ
-    if (type === 'recovery' || type === 'invite') {
+
+    // パスワードリセット
+    if (type === 'recovery') {
       return NextResponse.redirect(`${origin}/update-password`)
     }
+
+    // ユーザー情報を取得
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user?.email) {
+      return NextResponse.redirect(`${origin}/login?error=auth`)
+    }
+
+    // profilesに登録がなければ新規招待ユーザー → プロフィール作成してパスワード設定へ
+    const { data: existingProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (!existingProfile) {
+      // Stripeの購読状態を確認（なければactive扱い＝管理者が招待した正規ユーザー）
+      const { data: stripeMember } = await supabaseAdmin
+        .from('stripe_members')
+        .select('subscription_status, stripe_customer_id')
+        .eq('email', user.email)
+        .single()
+
+      const { data: school } = await supabaseAdmin
+        .from('schools')
+        .select('id')
+        .eq('slug', 'chance')
+        .single()
+
+      await supabaseAdmin.from('profiles').insert({
+        id: user.id,
+        email: user.email,
+        role: 'student',
+        school_id: school?.id ?? null,
+        subscription_status: stripeMember?.subscription_status ?? 'active',
+        stripe_customer_id: stripeMember?.stripe_customer_id ?? null,
+      })
+
+      return NextResponse.redirect(`${origin}/update-password`)
+    }
+
     return NextResponse.redirect(`${origin}/portal`)
   }
 
@@ -42,7 +83,6 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/update-password`)
     }
 
-    // マジックリンク（旧フロー）→ プロフィール確認してポータルへ
     const { data: { user } } = await supabase.auth.getUser()
     if (!user?.email) {
       return NextResponse.redirect(`${origin}/login?error=auth`)
@@ -72,7 +112,7 @@ export async function GET(request: Request) {
         email: user.email,
         role: 'student',
         school_id: school?.id ?? null,
-        subscription_status: stripeMember?.subscription_status ?? null,
+        subscription_status: stripeMember?.subscription_status ?? 'active',
         stripe_customer_id: stripeMember?.stripe_customer_id ?? null,
       })
     }

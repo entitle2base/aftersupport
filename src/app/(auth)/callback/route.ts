@@ -1,17 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+// すべての処理を /auth/callback に委譲する
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
-  const code = searchParams.get('code')
-
-  if (code) {
-    const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      return NextResponse.redirect(`${origin}/portal`)
-    }
-  }
-
-  return NextResponse.redirect(`${origin}/login?error=auth`)
+  const params = searchParams.toString()
+  return NextResponse.redirect(`${origin}/auth/callback${params ? `?${params}` : ''}`)
 }

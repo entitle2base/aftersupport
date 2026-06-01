@@ -138,6 +138,9 @@ export default function UpdatePasswordPage() {
         throw new Error(d.error ?? '設定に失敗しました')
       }
 
+      // 次回ログイン時にiOSが直接Face IDを起動できるようcredential IDを保存
+      localStorage.setItem('webauthn_credential_id', credential.id)
+
       setStep('done')
       setTimeout(() => router.push('/dashboard'), 1800)
     } catch (err: unknown) {

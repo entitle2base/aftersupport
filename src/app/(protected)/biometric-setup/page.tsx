@@ -95,6 +95,9 @@ export default function BiometricSetupPage() {
         throw new Error(d.error ?? '設定に失敗しました')
       }
 
+      // 次回ログイン時にiOSが直接Face IDを起動できるようcredential IDを保存
+      localStorage.setItem('webauthn_credential_id', credential.id)
+
       setDone(true)
       setTimeout(() => router.push('/portal'), 2200)
     } catch (err: unknown) {
