@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      redirect_uri: `${origin}/auth/line/callback`,
+      redirect_uri: 'https://aftersupport.vercel.app/auth/line/callback',
       client_id: process.env.NEXT_PUBLIC_LINE_LOGIN_CHANNEL_ID!,
       client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET!,
     }),
