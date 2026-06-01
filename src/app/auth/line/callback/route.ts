@@ -10,8 +10,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${origin}/line-connect?error=denied`)
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin
-
   // LINEのアクセストークンを取得
   const tokenRes = await fetch('https://api.line.me/oauth2/v2.1/token', {
     method: 'POST',
@@ -19,7 +17,7 @@ export async function GET(req: NextRequest) {
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      redirect_uri: `${siteUrl}/auth/line/callback`,
+      redirect_uri: `${origin}/auth/line/callback`,
       client_id: process.env.NEXT_PUBLIC_LINE_LOGIN_CHANNEL_ID!,
       client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET!,
     }),
