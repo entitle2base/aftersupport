@@ -23,7 +23,7 @@ export default async function LineConnectPage({
 
   const { error } = await searchParams
 
-  const channelId = process.env.NEXT_PUBLIC_LINE_LOGIN_CHANNEL_ID!
+  const channelId = process.env.LINE_LOGIN_CHANNEL_ID!
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
   const redirectUri = `${siteUrl}/auth/line/callback`
 

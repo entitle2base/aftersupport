@@ -35,7 +35,7 @@ export default function LineConnectClient({
           LINEと連携してください
         </h1>
         <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.8, marginBottom: 28 }}>
-          動画リンクなどの連絡をLINEで受け取るために、<br />
+          サービスをご利用いただくために、<br />
           LINEアカウントとの連携が必要です。<br />
           一度だけの操作で完了します。
         </p>
