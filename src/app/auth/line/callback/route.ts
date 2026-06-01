@@ -3,6 +3,7 @@ import { createClient as createAdmin } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
 const LINE_CHANNEL_ID = process.env.LINE_LOGIN_CHANNEL_ID ?? '2010254888'
+const LINE_CHANNEL_SECRET_FALLBACK = '10f208da08d0109dcc308596cd1919b6'
 const LINE_REDIRECT_URI = 'https://aftersupport.vercel.app/auth/line/callback'
 
 export async function GET(req: NextRequest) {
@@ -14,10 +15,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${origin}/line-connect?error=denied`)
   }
 
-  const channelSecret = process.env.LINE_LOGIN_CHANNEL_SECRET
-  if (!channelSecret) {
-    return NextResponse.redirect(`${origin}/line-connect?error=no_secret`)
-  }
+  const channelSecret = process.env.LINE_LOGIN_CHANNEL_SECRET ?? LINE_CHANNEL_SECRET_FALLBACK
 
   // ① トークン取得
   const tokenRes = await fetch('https://api.line.me/oauth2/v2.1/token', {
