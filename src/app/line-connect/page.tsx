@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
 import LineConnectClient from './LineConnectClient'
 
 export default async function LineConnectPage({
